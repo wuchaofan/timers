@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from Log import LOG
+#from Log import LOG
 import MySQLdb,json,time
 import MySQLdb.cursors
 from datetime import datetime
@@ -8,7 +8,8 @@ import setting
 # from yqc_libs.baiduPush.Channel import Channel
 from apns import APNs, Frame, Payload
 from multiprocessing import Process
-
+logger = logging.getLogger('jobs')
+LOG=logger.debug
 class Notify(object):
 	"""docstring for Notify"""
 	def __init__(self):
@@ -22,7 +23,7 @@ class Notify(object):
 		except MySQLdb.Error,e:
 			print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
 	def query(self):
-		print 'Into query.....'
+		#print 'Into query.....'
 		
 		s_now=datetime.now().strftime("%Y-%m-%d %H:%M:00")
 		e_now=datetime.now().strftime("%Y-%m-%d %H:%M:59")
@@ -34,7 +35,6 @@ class Notify(object):
 			for rr in res:
 				q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(rr['vid'])
 				self.cur.execute(q)
-		# print '======>',res
 		return res
 
 	def sendMessage(self):
@@ -48,16 +48,16 @@ class Notify(object):
 				self.iosNotify(ii['title'],ii['vid'],ii['key_id'])
 
 			end = time.time()	
-
-		else:
-			LOG( '----eeee---')
-			# print '========='
-			sec=setting.PERIOD-datetime.now().second
-			# print 'sleep....',sec 
-			time.sleep(sec)
+		return  rest
+		#else:
+		#	LOG( '----eeee---')
+		#	print '=========',datetime.now()
+		#	sec=setting.PERIOD-datetime.now().second
+		#	print 'sleep....',sec 
+		#	time.sleep(sec)
 
 	def getIOSDeviceToken(self):
-		# print 'Into getIOSDeviceToken....'
+		print 'Into getIOSDeviceToken....'
 		q="SELECT `devicetoken` FROM `user_device` WHERE `uid`=0"
 		self.cur.execute(q)
 		rest=self.cur.fetchall()
@@ -94,7 +94,7 @@ class Notify(object):
 	def close(self):
 		if self.conn:
 			self.cur.close()
-			# self.conn.commit()
+			self.conn.commit()
 			self.conn.close()
 
 
