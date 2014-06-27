@@ -25,7 +25,7 @@ def servermain():
 
 	
 if __name__=='__main__':
-	pid="test_app.pid"
+	pid="timer.pid"
 	fh = logging.FileHandler("test.log", "w")
 	fh.setLevel(logging.DEBUG)
 	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
