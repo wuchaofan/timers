@@ -31,10 +31,7 @@ class Notify(object):
 		q += " AND \'"+e_now+"\'"
 		self.cur.execute(q)
 		res=self.cur.fetchall()
-		if res:
-			for rr in res:
-				q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(rr['vid'])
-				self.cur.execute(q)
+
 		return res
 
 	def sendMessage(self):
@@ -43,18 +40,12 @@ class Notify(object):
 		if rest:
 			LOG(rest)
 			# print rest
-			start = time.time()
 			for ii in rest:
 				self.iosNotify(ii['title'],ii['vid'],ii['key_id'])
+				q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(ii['vid'])
+				self.cur.execute(q)
 
-			end = time.time()	
 		return  rest
-		#else:
-		#	LOG( '----eeee---')
-		#	print '=========',datetime.now()
-		#	sec=setting.PERIOD-datetime.now().second
-		#	print 'sleep....',sec 
-		#	time.sleep(sec)
 
 	def getIOSDeviceToken(self):
 		print 'Into getIOSDeviceToken....'
