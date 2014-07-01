@@ -27,8 +27,9 @@ class Notify(object):
 		
 		s_now=datetime.now().strftime("%Y-%m-%d %H:%M:00")
 		e_now=datetime.now().strftime("%Y-%m-%d %H:%M:59")
-		q = "SELECT `vid`,`key_id`,`sendtime`,`title` FROM `visit_hit` WHERE `status`=\'wait\' AND `sendtime` between \'"+s_now+"\'"
+		q = "SELECT `vid`,`key_id`,`id`,`sid`,`sendtime`,`title` FROM `visit_hit` WHERE `status`=\'wait\' AND `sendtime` between \'"+s_now+"\'"
 		q += " AND \'"+e_now+"\'"
+		# print q
 		self.cur.execute(q)
 		res=self.cur.fetchall()
 
@@ -41,7 +42,8 @@ class Notify(object):
 			LOG(rest)
 			# print rest
 			for ii in rest:
-				self.iosNotify(ii['title'],ii['vid'],ii['key_id'])
+				# print ii['title'],type(ii['title']),unicode(ii['title'],'utf8')
+				self.iosNotify(unicode(ii['title'],'utf8'),ii['vid'],ii['key_id'],ii['id'],ii['sid'])
 				q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(ii['vid'])
 				self.cur.execute(q)
 
@@ -54,7 +56,7 @@ class Notify(object):
 		rest=self.cur.fetchall()
 		tokens=[x['devicetoken'] for x in rest]
 		return tokens
-	def iosNotify(self,_title,vid,_id=19):
+	def iosNotify(self,_title,vid,key,_id,sid):
 		# print 'Into iosNotify....'
 		Devices = self.getIOSDeviceToken()
 		def iosApns(toDevices):
@@ -62,7 +64,7 @@ class Notify(object):
 			apn = APNs(use_sandbox=True, cert_file=setting.IOSPEM)
 			if toDevices:
 				for token in toDevices:
-					payload = Payload(alert=_title, sound="ping.aiff", badge=1,custom={'vid':vid,'id':_id})
+					payload = Payload(alert=_title, sound="ping.aiff", badge=1,custom={'vid':vid,'key':key,'id':_id,'sid':sid})
 					apn.gateway_server.send_notification(token, payload)
 		p=Process(target=iosApns,args=(Devices,))
 		p.start()
