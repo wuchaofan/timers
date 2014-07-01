@@ -1,15 +1,19 @@
 #!/bin/bash
-case $1 in
+case "$1" in
 start)
 	python mulity.py
 	;;
 stop)
-	kill -9 `cat timer.pid`
+	kill -HUP `cat timer.pid`
 	;;
 restart)
 	kill -HUP `cat timer.pid`
-	echo "restart done""
+	echo "stop done"
+	sleep 1
+	python mulity.py
+	echo "restart done"
 	;;
 *)
-	echo "stop|restart";;
+	echo "stop|restart"
+	;;
 esac
