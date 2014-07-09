@@ -21,9 +21,9 @@ class Notify(object):
 			self.conn.set_character_set('utf8')
 			self.cur=self.conn.cursor()
 		except MySQLdb.Error,e:
-			print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
+			logger.error("Mysql Error %d: %s" % (e.args[0], e.args[1]))
 	def query(self):
-		#print 'Into query.....'
+		LOG('Into query.....')
 		
 		s_now=datetime.now().strftime("%Y-%m-%d %H:%M:00")
 		e_now=datetime.now().strftime("%Y-%m-%d %H:%M:59")
@@ -50,7 +50,7 @@ class Notify(object):
 		return  rest
 
 	def getIOSDeviceToken(self):
-		print 'Into getIOSDeviceToken....'
+		LOG('Into getIOSDeviceToken....')
 		q="SELECT `devicetoken` FROM `user_device` WHERE `uid`=0"
 		self.cur.execute(q)
 		rest=self.cur.fetchall()
