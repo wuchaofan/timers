@@ -5,11 +5,13 @@ import MySQLdb,json,time
 import MySQLdb.cursors
 from datetime import datetime
 import setting
-# from yqc_libs.baiduPush.Channel import Channel
-from apns import APNs, Frame, Payload
+from baiduPush.Channel import Channel
+from apns import APNs, Payload
 from multiprocessing import Process
 logger = logging.getLogger('jobs')
 LOG=logger.debug
+apn = APNs(use_sandbox=True, cert_file=setting.IOSPEM)
+
 class Notify(object):
 	"""docstring for Notify"""
 	def __init__(self):
@@ -37,53 +39,53 @@ class Notify(object):
 
 	def sendMessage(self):
 		rest = self.query()
-		# print rest
+		iosarr=[]
+		androidarr=[]
 		if rest:
-			LOG(rest)
-			# print rest
 			for ii in rest:
-				# print ii['title'],type(ii['title']),unicode(ii['title'],'utf8')
-				self.iosNotify(unicode(ii['title'],'utf8'),ii['vid'],ii['key_id'],ii['id'],ii['sid'])
-				q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(ii['vid'])
-				self.cur.execute(q)
-
+				iosp=Process(target=self.iosNotify,args=(unicode(ii['title'],'utf8'),ii['vid'],ii['key_id'],ii['id'],ii['sid'],))
+				# androidp=Process(target=self.androidNotify,args=(unicode(ii['title'],'utf8'),ii['vid'],u'信息'))
+				iosarr.append(iosp)
+				# androidarr.append(androidp)
+				iosp.start()
+				# androidp.start()
+			for pr in range(len(rest)):
+				iosarr[pr].join()
+				# androidarr[pr].join()
 		return  rest
 
 	def getIOSDeviceToken(self):
 		LOG('Into getIOSDeviceToken....')
-		q="SELECT `devicetoken` FROM `user_device` WHERE `uid`=0"
+		q="SELECT `devicetoken` FROM `user_device` WHERE `uid`=125676;"
 		self.cur.execute(q)
 		rest=self.cur.fetchall()
 		tokens=[x['devicetoken'] for x in rest]
 		return tokens
+
 	def iosNotify(self,_title,vid,key,_id,sid):
 		# print 'Into iosNotify....'
 		Devices = self.getIOSDeviceToken()
-		def iosApns(toDevices):
-			# print 'Into iosApns.....'
-			apn = APNs(use_sandbox=True, cert_file=setting.IOSPEM)
-			if toDevices:
-				for token in toDevices:
-					payload = Payload(alert=_title, sound="ping.aiff", badge=1,custom={'vid':vid,'key':key,'id':_id,'sid':sid})
-					apn.gateway_server.send_notification(token, payload)
-		p=Process(target=iosApns,args=(Devices,))
-		p.start()
-		p.join()
+
+		for token in Devices:
+			payload = Payload(alert=_title, sound="ping.aiff", badge=1,custom={'vid':vid,'key':key,'id':_id,'sid':sid})
+			apn.gateway_server.send_notification(token, payload)
+		q="UPDATE `visit_hit` SET `status`=\'sent\' WHERE vid="+str(vid)
+		self.cur.execute(q)
 		# print 'OVER.....'
-	# def androidNotify(self,_title,_message,vid):
-	# 	bpush=Channel(setting.baidupush_apikey,setting.baidupush_secretkey)
-	# 	# for device in androidDevices:
-	# 	push_type = 1
-	# 	# optional = {}
-	# 	# optional[Channel.USER_ID] = ''
-	# 	# optional[Channel.CHANNEL_ID] =''
-	# 	#推送通知类型
-	# 	optional[Channel.MESSAGE_TYPE] = 1
-	# 	message_key = "message"
-	# 	message = json.dumps({'title':_title,'description':_message})
-	# 	ret = bpush.pushMessage(push_type, message.encode('utf8'), message_key)
-	# 	if not ret:
-	# 		logger.error("message send to android device fail")
+	def androidNotify(self,_title,_message,vid):
+		bpush=Channel(setting.baidupush_apikey,setting.baidupush_secretkey)
+		# for device in androidDevices:
+		push_type = 1
+		# optional = {}
+		# optional[Channel.USER_ID] = ''
+		# optional[Channel.CHANNEL_ID] =''
+		#推送通知类型
+		optional[Channel.MESSAGE_TYPE] = 1
+		message_key = "message"
+		message = json.dumps({'title':_title,'description':_message})
+		ret = bpush.pushMessage(push_type, message.encode('utf8'), message_key)
+		if not ret:
+			logger.error("message send to android device fail")
 	def close(self):
 		if self.conn:
 			self.cur.close()
