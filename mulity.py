@@ -17,7 +17,7 @@ def servermain():
 	try:
 		while True:
 			noo=Notify()
-			rest=noo.sendMessage()	
+			rest=noo.bingfa()
 			noo.close()
 			if not rest:
 				logger.debug('No data')
@@ -39,7 +39,7 @@ if __name__=='__main__':
 	
 	keep_fds = [fh.stream.fileno()]
 	logger.debug("Start...")
-	# servermain()
-	daemon = Daemonize(app="jobs", pid=pid, action=servermain,keep_fds=keep_fds)
-	daemon.start()
+	servermain()
+	# daemon = Daemonize(app="jobs", pid=pid, action=servermain,keep_fds=keep_fds)
+	# daemon.start()
 
